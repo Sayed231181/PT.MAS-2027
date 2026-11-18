@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a7c7c">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<title>Laporan PT. Mitra Abadi Safa</title>
+<link href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--teal:#0a7c7c;--mint:#dcf3dc;--lilac:#e6a8e2;--sky:#97dcf8;--ink:#10302f;--bg:#f3f8f7;--card:#fff;--line:#c9dcda;--red:#b3261e;box-sizing:border-box}
+@media(prefers-color-scheme:dark){:root{--bg:#0c1f1f;--card:#143232;--ink:#e6f4f2;--line:#2c5251;--mint:#1d4a45;--red:#ff8a80}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:var(--teal);color:#fff;padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 14px}
+h1,h2{font-family:Bitter,Georgia,serif;margin:0}
+h1{font-size:19px}h2{font-size:16px;margin:18px 0 8px}
+header input{background:transparent;border:0;border-bottom:1px solid #ffffff80;color:#fff;font:inherit;width:60%;padding:2px 0;margin-top:6px}
+#sync{float:right;font-size:12px;background:#ffffff26;border-radius:10px;padding:2px 9px}
+main{padding:12px 14px calc(env(safe-area-inset-bottom,0px) + 90px);max-width:760px;margin:auto}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{flex:1;border:0;background:none;color:var(--ink);padding:12px 2px;font:inherit;font-size:13px;opacity:.65}
+nav button.on{opacity:1;font-weight:700;box-shadow:inset 0 3px 0 var(--teal)}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.s{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--sky);border-radius:6px;padding:10px 12px}
+.s:nth-child(2n){border-left-color:var(--lilac)}
+.s small{display:block;opacity:.75}.s b{font-family:Bitter,Georgia,serif;font-size:17px;word-break:break-word}
+.s.w{grid-column:1/-1;border-left-color:var(--teal)}
+form,.f{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:10px;display:grid;gap:8px}
+label{font-size:13px;opacity:.8;display:grid;gap:3px}
+input{font:inherit;padding:9px;border:1px solid var(--line);border-radius:5px;background:var(--bg);color:var(--ink);width:100%}
+button.p{background:var(--teal);color:#fff;border:0;border-radius:5px;padding:11px;font:inherit;font-weight:600}
+button.p:focus-visible,nav button:focus-visible,input:focus-visible{outline:3px solid var(--lilac);outline-offset:1px}
+.t{overflow-x:auto;margin-top:10px;border:1px solid var(--line);border-radius:6px;background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:480px;font-size:13px}
+th{background:var(--mint);text-align:left;padding:7px 8px;white-space:nowrap}
+td{padding:7px 8px;border-top:1px solid var(--line);white-space:nowrap}
+td.n,th.n{text-align:right}tfoot td{font-weight:700;background:var(--mint)}
+.x{background:none;border:0;color:var(--red);font-size:18px;padding:0 4px}
+.e{padding:16px;text-align:center;opacity:.7}
+.m{display:flex;gap:8px;margin-top:20px}.m button,.m label{flex:1;text-align:center;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:10px;border-radius:5px;font:inherit;font-size:13px;display:block}
+</style>
+</head>
+<body>
+<header><span id="sync"></span><h1>PT. Mitra Abadi Safa</h1><input id="per" aria-label="Periode" onchange="S.p=this.value;save()"></header>
+<main id="v"></main>
+<nav id="nav"></nav>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+// Isi dengan konfigurasi proyek Firebase Anda agar data tersinkron di 2 HP.
+const FB={apiKey:"",authDomain:"",projectId:"",appId:""};
+const K="mas2027",NAMA=["Pak Roni","Pak Wardi","Pak Fiki","Bang Alwi","Bu Mira","Pak Yudi"];
+const DEF={p:"16 - 31 NOV",kas:[],eks:[],amb:[],ops:[],stk:[],bh:{}};
+let S=Object.assign({},DEF,JSON.parse(localStorage.getItem(K)||"{}")),ref=null,tab=0;
+const $=s=>document.querySelector(s);
+const rp=n=>(n<0?"-":"")+"Rp "+Math.abs(Math.round(n)).toLocaleString("id-ID");
+const sm=(a,f)=>a.reduce((s,r)=>s+(+r[f]||0),0);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const today=()=>new Date().toISOString().slice(0,10);
+function save(){localStorage.setItem(K,JSON.stringify(S));if(ref)ref.set(S).catch(()=>{})}
+const D={
+ eks:{t:"Ekspedisi",m:["h","o","y"],c:[["t","Tanggal","date"],["h","Harga per kilo","number"],["o","Ongkos ekspedisi","number"],["y","Mobil Yed (kuning + tronton)","number"]],calc:["Laba ekspedisi",r=>(+r.o||0)-(+r.y||0)]},
+ amb:{t:"Ambilan Abang Adi",m:["j"],c:[["t","Tanggal","date"],["j","Jumlah","number"],["k","Keterangan","text"]]},
+ ops:{t:"Biaya operasional",m:["m","o"],c:[["t","Tanggal","date"],["k","Keterangan","text"],["m","Mutasi","number"],["to","Transfer ke","text"],["o","Ongkos mobil","number"]]},
+ kas:{t:"Tambah saldo kas",m:["j"],c:[["t","Tanggal","date"],["j","Jumlah","number"],["k","Keterangan","text"]]},
+ stk:{t:"Stok pakan di depo",m:[],c:[["t","Tanggal","date"],["d","Tujuan / dari","text"],["p","Jenis pakan","text"],["j","Jumlah (+ masuk, - keluar)","number"]]}
+};
+function T(){const lb=sm(S.eks,"o")-sm(S.eks,"y"),op=sm(S.ops,"m")+sm(S.ops,"o"),ab=sm(S.amb,"j"),kt=sm(S.kas,"j"),bn=lb-op;
+ return{lb,op,ab,kt,bn,sal:kt+lb-op-ab,tr:S.eks.length,on:sm(S.eks,"o")}}
+function form(k,btn){const d=D[k];return `<div class="f">${d.c.map(([f,l,ty])=>`<label>${l}<input id="${k}_${f}" type="${ty}" ${ty=="number"?'inputmode="decimal"':""} ${ty=="date"?`value="${today()}"`:""}></label>`).join("")}<button class="p" onclick="add('${k}')">${btn||"Simpan"}</button></div>`}
+function list(k){const d=D[k],a=S[k];if(!a.length)return `<div class="e">Belum ada data. Isi formulir di atas lalu tekan Simpan.</div>`;
+ const hd=d.c.map(([f,l,ty])=>`<th class="${ty=="number"?"n":""}">${l}</th>`).join("")+(d.calc?`<th class="n">${d.calc[0]}</th>`:"")+"<th></th>";
+ const body=a.map((r,i)=>`<tr>${d.c.map(([f,l,ty])=>`<td class="${ty=="number"?"n":""}">${ty=="number"?(d.m.includes(f)?rp(r[f]||0):esc(r[f])):esc(r[f])}</td>`).join("")}${d.calc?`<td class="n">${rp(d.calc[1](r))}</td>`:""}<td><button class="x" aria-label="Hapus" onclick="del('${k}',${i})">&times;</button></td></tr>`).join("");
+ const ft=d.m.length?`<tfoot><tr>${d.c.map(([f,l,ty],j)=>`<td class="${ty=="number"?"n":""}">${j==0?"Total":d.m.includes(f)?rp(sm(a,f)):""}</td>`).join("")}${d.calc?`<td class="n">${rp(a.reduce((s,r)=>s+d.calc[1](r),0))}</td>`:""}<td></td></tr></tfoot>`:"";
+ return `<div class="t"><table><thead><tr>${hd}</tr></thead><tbody>${body}</tbody>${ft}</table></div>`}
+function add(k){const r={};let ok=false;D[k].c.forEach(([f,l,ty])=>{const v=$("#"+k+"_"+f).value.trim();r[f]=v;if(f!="t"&&v)ok=true});
+ if(!ok){alert("Isi minimal satu kolom selain tanggal.");return}S[k].push(r);save();render()}
+function del(k,i){if(confirm("Hapus baris ini?")){S[k].splice(i,1);save();render()}}
+function bh(n,v){S.bh[n]=+v;save();render()}
+const st=(l,v,c)=>`<div class="s ${c||""}"><small>${l}</small><b>${v}</b></div>`;
+const V=[
+ ()=>{const t=T();return `<div class="g">${st("Jumlah Truk",t.tr)}${st("Saldo Rekening",rp(t.sal),"w")}${st("Total ongkos ekspedisi",rp(t.on))}${st("Laba ekspedisi",rp(t.lb))}${st("Biaya operasional",rp(t.op))}${st("Ambilan Abang Adi",rp(t.ab))}${st("Keuntungan bersih",rp(t.bn),"w")}</div>
+ <div class="m"><button onclick="exp()">Cadangkan data</button><label>Pulihkan data<input type="file" accept=".json" onchange="imp(this)" hidden></label></div>`},
+ ()=>`<h2>Ekspedisi</h2>${form("eks")}${list("eks")}<h2>Ambilan Abang Adi</h2>${form("amb")}${list("amb")}`,
+ ()=>`<h2>Biaya operasional</h2>${form("ops")}${list("ops")}`,
+ ()=>{const t=T(),pool=Math.max(t.bn,0)*.9,tp=NAMA.reduce((s,n)=>s+(+S.bh[n]||0),0);
+  return `<div class="g">${st("Saldo Rekening Ekspedisi",rp(t.sal),"w")}${st("Keuntungan bersih",rp(t.bn))}${st("10% modal",rp(Math.max(t.bn,0)*.1))}${st("Dibagi 90%",rp(pool),"w")}</div>
+  <h2>Tambah saldo kas</h2>${form("kas","Tambah saldo kas")}${list("kas")}
+  <h2>Bagi hasil</h2><div class="t"><table><thead><tr><th>Nama</th><th class="n">Bagian (%)</th><th class="n">Jumlah</th></tr></thead><tbody>${NAMA.map(n=>`<tr><td>${n}</td><td class="n"><input type="number" inputmode="decimal" style="width:80px" value="${S.bh[n]||""}" onchange="bh('${n}',this.value)"></td><td class="n">${rp(pool*(+S.bh[n]||0)/100)}</td></tr>`).join("")}</tbody><tfoot><tr><td>Total</td><td class="n">${tp}%</td><td class="n">${rp(pool*tp/100)}</td></tr></tfoot></table></div>${tp>100?`<p style="color:var(--red)">Total bagian lebih dari 100%.</p>`:""}`},
+ ()=>{const g={};S.stk.forEach(r=>{const p=(r.p||"-").trim()||"-";g[p]=(g[p]||0)+(+r.j||0)});const ks=Object.keys(g);
+  return `<h2>CV. Berkah Maju Rejeki</h2>${ks.length?`<div class="g">${ks.map(p=>st(esc(p),g[p].toLocaleString("id-ID"))).join("")}</div>`:""}<h2>Catat stok</h2>${form("stk")}${list("stk")}`}
+];
+const TABS=["Beranda","Ekspedisi","Operasional","Keuangan","Stok"];
+function render(){$("#per").value=S.p;$("#sync").textContent=ref?"Tersinkron":"Lokal saja";
+ $("#nav").innerHTML=TABS.map((n,i)=>`<button class="${i==tab?"on":""}" onclick="tab=${i};render();scrollTo(0,0)">${n}</button>`).join("");$("#v").innerHTML=V[tab]()}
+function exp(){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:"application/json"}));a.download="cadangan-mas-"+today()+".json";a.click()}
+function imp(el){const f=el.files[0];if(!f)return;f.text().then(x=>{try{S=Object.assign({},DEF,JSON.parse(x));save();render()}catch(e){alert("File cadangan tidak valid.")}})}
+if(FB.apiKey){try{firebase.initializeApp(FB);ref=firebase.firestore().collection("mas").doc("data2027");
+ ref.onSnapshot(d=>{if(d.exists){if(!d.metadata.hasPendingWrites){S=Object.assign({},DEF,d.data());localStorage.setItem(K,JSON.stringify(S));render()}}else ref.set(S)})}catch(e){ref=null}}
+render();
+if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
